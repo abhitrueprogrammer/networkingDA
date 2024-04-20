@@ -19,11 +19,32 @@ class SharedVariable(SharedList):
 
 # Sender class, inheriting from SharedList
 class Sender(SharedList):
+    """
+    The Sender class represents a sender in a flow control error correction protocol.
+
+    Attributes:
+        __already_sent (list): List to keep track of already sent packets.
+        already_recieved_ACK (list): List to keep track of received acknowledgments.
+
+    Methods:
+        send(sliding_window): Sends packets from the sliding window.
+        removeAlreadySent(packet_numbers): Removes packets that are already sent.
+        ACK(): Handles acknowledgment.
+
+    """
+
     __already_sent = []  # List to keep track of already sent packets
     already_recieved_ACK = []  # List to keep track of received acknowledgments
 
     # Method to send packets
     def send(self, sliding_window):
+        """
+        Sends packets from the sliding window.
+
+        Args:
+            sliding_window (list): A list of tuples representing the packet number and data.
+
+        """
         for packet_no, data in sliding_window:
             if packet_no not in self.__already_sent:
                 # Add error correction and add packet to the list
@@ -34,21 +55,55 @@ class Sender(SharedList):
 
     # Method to remove packets that are already sent
     def removeAlreadySent(self, packet_numbers):
+        """
+        Removes packets that are already sent.
+
+        Args:
+            packet_numbers (list): A list of packet numbers to be removed.
+
+        """
         for item in packet_numbers:
             self.__already_sent.remove(item)
 
     # Method to handle acknowledgment
     def ACK(self):
+        """
+        Handles acknowledgment.
+
+        Returns:
+            int: The current sent acknowledgment.
+
+        """
         if SharedVariable.current_sent_ACK not in self.already_recieved_ACK:
             self.already_recieved_ACK.append(SharedVariable.current_sent_ACK)
         return SharedVariable.current_sent_ACK
 
 # Receiver class, inheriting from SharedList
 class Reciever(SharedList):
-    AllData = {-1:""}  # Dictionary to hold received data
+    """
+    The Reciever class represents a receiver in a flow control error correction protocol.
+
+    Attributes:
+        AllData (dict): Dictionary to hold received data.
+
+    Methods:
+        recieve(): Method to receive packets.
+    """
+
+    AllData = {-1: ""}  # Dictionary to hold received data
 
     # Method to receive packets
     def recieve(self):
+        """
+        Receive packets and process them.
+
+        This method iterates over the packet list and checks for errors in the received data.
+        If the data is error-free, it removes the parity bits, stores the data in the AllData dictionary,
+        and sends an acknowledgment. If the data is corrupted, it sends a negative acknowledgment.
+
+        Returns:
+            None
+        """
         for packet_number, data in SharedVariable.packet_list:
             if packet_number not in self.AllData:
                 # Check for errors and process data
